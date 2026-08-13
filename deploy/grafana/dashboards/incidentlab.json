@@ -1,0 +1,1 @@
+{"title":"Incident Command Lab","schemaVersion":39,"panels":[{"type":"timeseries","title":"Requests","targets":[{"expr":"incidentlab_http_requests_total"}]},{"type":"logs","title":"Correlated logs","targets":[{"expr":"{job=\"incidentlab\"}"}]}]}

@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata: {name: incidentlab}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: gateway, namespace: incidentlab}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: incidentlab-gateway}}
+  template:
+    metadata: {labels: {app: incidentlab-gateway}}
+    spec:
+      serviceAccountName: gateway
+      securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: gateway
+          image: incidentlab-image-digest
+          ports: [{containerPort: 8080}]
+          env:
+            - {name: PORT, value: "8080"}
+            - {name: DATABASE_URL, valueFrom: {secretKeyRef: {name: database, key: url}}}
+            - {name: NATS_URL, value: "nats://nats:4222"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "otel-collector:4317"}
+            - {name: AUTH_MODE, value: "entra"}
+            - {name: AUTH_ISSUER, valueFrom: {configMapKeyRef: {name: console-runtime, key: auth-issuer}}}
+            - {name: AUTH_AUDIENCE, valueFrom: {configMapKeyRef: {name: console-runtime, key: auth-audience}}}
+            - {name: AUTH_JWKS_URL, valueFrom: {configMapKeyRef: {name: console-runtime, key: auth-jwks-url}}}
+            - {name: OPERATOR_GROUP_ID, valueFrom: {secretKeyRef: {name: operator-auth, key: group-id}}}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          readinessProbe: {httpGet: {path: /readyz, port: 8080}}
+          livenessProbe: {httpGet: {path: /healthz, port: 8080}}
+          resources: {requests: {cpu: 25m, memory: 64Mi}, limits: {cpu: 500m, memory: 256Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: gateway, namespace: incidentlab}
+spec: {type: ClusterIP, selector: {app: incidentlab-gateway}, ports: [{port: 8080, targetPort: 8080}]}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: gateway, namespace: incidentlab, annotations: {azure.workload.identity/client-id: azure-workload-client-id}}

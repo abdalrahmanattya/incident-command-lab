@@ -1,0 +1,4 @@
+resource_group_name  = "portfolio-tfstate"
+storage_account_name = "portfolioincidenttf"
+container_name       = "tfstate"
+key                  = "incident-command-lab.tfstate"

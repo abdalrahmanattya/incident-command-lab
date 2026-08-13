@@ -1,0 +1,6 @@
+.git
+.terraform
+coverage.out
+*.tfstate*
+docs
+AGENTS.md

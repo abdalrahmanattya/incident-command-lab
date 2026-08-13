@@ -1,0 +1,17 @@
+name: CI
+on: {push: {}, pull_request: {}}
+permissions: {contents: read}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: {go-version-file: go.mod, cache: true}
+      - run: gofmt -d internal cmd
+      - run: go test -race -cover ./...
+      - run: go vet ./...
+      - uses: aquasecurity/trivy-action@0.24.0
+        with: {scan-type: fs, scan-ref: ., severity: CRITICAL,HIGH, ignore-unfixed: true}
+      - uses: gitleaks/gitleaks-action@v2
+        env: {GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"}

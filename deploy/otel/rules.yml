@@ -1,0 +1,13 @@
+groups:
+  - name: incidentlab-slo
+    rules:
+      - alert: ReservationErrorBudgetBurn
+        expr: sum(rate(http_server_request_duration_seconds_count{status_code=~"5.."}[5m])) / sum(rate(http_server_request_duration_seconds_count[5m])) > 0.01
+        for: 10m
+        labels: {severity: page}
+        annotations: {summary: "Reservation error rate exceeds 1%"}
+      - alert: OutboxBacklog
+        expr: incidentlab_outbox_pending > 100
+        for: 15m
+        labels: {severity: ticket}
+        annotations: {summary: "Outbox backlog exceeds 100 events"}

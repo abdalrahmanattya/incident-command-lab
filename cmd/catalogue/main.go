@@ -1,0 +1,9 @@
+package main
+
+import "github.com/abdalrahmanattya/incident-command-lab/internal/server"
+
+func main() {
+	if err := server.Run("catalogue"); err != nil {
+		panic(err)
+	}
+}

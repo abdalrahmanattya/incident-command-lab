@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: incidentlab-gateway, labels: {app: incidentlab}}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: incidentlab}}
+  template:
+    metadata: {labels: {app: incidentlab}}
+    spec:
+      securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: gateway
+          image: incident-command-lab:dev
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8080}]
+          securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}, readOnlyRootFilesystem: true}
+          readinessProbe: {httpGet: {path: /readyz, port: 8080}}
+          livenessProbe: {httpGet: {path: /healthz, port: 8080}}
+          resources: {requests: {cpu: 25m, memory: 32Mi}, limits: {cpu: 250m, memory: 128Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: incidentlab-gateway}
+spec: {selector: {app: incidentlab}, ports: [{port: 8080, targetPort: 8080}]}

@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: console-runtime, namespace: incidentlab}
+data:
+  auth-issuer: https://login.microsoftonline.com/entra-tenant-id/v2.0
+  auth-audience: api://entra-api-client
+  auth-jwks-url: https://login.microsoftonline.com/entra-tenant-id/discovery/v2.0/keys
+  runtime-config.js: |
+    window.__INCIDENTLAB_CONFIG__ = { authMode: 'entra', clientId: 'entra-spa-client-id', tenantId: 'entra-tenant-id', operatorGroupId: 'operator-group-id', apiScope: 'api://entra-api-client/access_as_user' };
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: console, namespace: incidentlab}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: incidentlab-console}}
+  template:
+    metadata: {labels: {app: incidentlab-console}}
+    spec:
+      securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: console
+          image: incidentlab-ui-image-digest
+          ports: [{containerPort: 8080}]
+          volumeMounts: [{name: runtime, mountPath: /usr/share/nginx/html/runtime-config.js, subPath: runtime-config.js, readOnly: true}, {name: tmp, mountPath: /tmp}]
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          readinessProbe: {httpGet: {path: /readyz, port: 8080}}
+          livenessProbe: {httpGet: {path: /readyz, port: 8080}}
+          resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 250m, memory: 128Mi}}
+      volumes: [{name: runtime, configMap: {name: console-runtime}}, {name: tmp, emptyDir: {medium: Memory}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: console, namespace: incidentlab}
+spec: {type: LoadBalancer, selector: {app: incidentlab-console}, ports: [{port: 80, targetPort: 8080}]}

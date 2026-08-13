@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: payment, namespace: incidentlab}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: payment}}
+  template:
+    metadata: {labels: {app: payment}}
+    spec:
+      containers:
+        - name: payment
+          image: incidentlab-image-digest
+          command: [/payment]
+          env: [{name: DATABASE_URL, valueFrom: {secretKeyRef: {name: database, key: url}}}, {name: NATS_URL, value: "nats://nats:4222"}, {name: PAYMENT_FAIL, value: "false"}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: notification, namespace: incidentlab}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: notification}}
+  template:
+    metadata: {labels: {app: notification}}
+    spec:
+      containers:
+        - name: notification
+          image: incidentlab-image-digest
+          command: [/notification]
+          env: [{name: DATABASE_URL, valueFrom: {secretKeyRef: {name: database, key: url}}}, {name: NATS_URL, value: "nats://nats:4222"}]

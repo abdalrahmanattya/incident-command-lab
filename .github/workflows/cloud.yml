@@ -1,0 +1,30 @@
+name: Cloud acceptance (manual)
+on: {workflow_dispatch: {inputs: {action: {description: plan/apply/smoke/destroy, required: true, type: choice, options: [plan, apply, smoke, destroy]}, confirm: {description: Type APPLY-APPROVED or DESTROY-APPROVED for destructive actions, required: true, type: string}}}}
+permissions: {id-token: write, contents: read}
+concurrency: {group: incidentlab-cloud, cancel-in-progress: false}
+jobs:
+  action:
+    if: github.event_name == 'workflow_dispatch'
+    environment: cloud-acceptance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with: {client-id: "${{ secrets.AZURE_CLIENT_ID }}", tenant-id: "${{ secrets.AZURE_TENANT_ID }}", subscription-id: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"}
+      - uses: hashicorp/setup-terraform@v3
+      - working-directory: terraform/azure
+        env:
+          TF_VAR_ssh_public_key: "${{ secrets.AZURE_SSH_PUBLIC_KEY }}"
+          TF_VAR_postgres_admin_password: "${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}"
+        run: terraform init -input=false -backend-config="resource_group_name=${{ secrets.TFSTATE_RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.TFSTATE_STORAGE_ACCOUNT }}" -backend-config="container_name=${{ secrets.TFSTATE_CONTAINER }}" -backend-config="key=incident-command-lab.tfstate" && terraform validate
+      - working-directory: terraform/azure
+        env:
+          TF_VAR_ssh_public_key: "${{ secrets.AZURE_SSH_PUBLIC_KEY }}"
+          TF_VAR_postgres_admin_password: "${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}"
+        run: |
+          case "${{ inputs.action }}" in
+            plan) terraform plan -input=false ;;
+            apply) test "${{ inputs.confirm }}" = APPLY-APPROVED; terraform apply -auto-approve -input=false; acr=$(terraform output -raw acr_login_server | cut -d. -f1); az acr build --registry "$acr" --image incidentlab:${GITHUB_SHA} ../../; az acr build --registry "$acr" --image incidentlab-ui:${GITHUB_SHA} ../../ui; digest=$(az acr repository show-manifests --name "$acr" --repository incidentlab --query "[?contains(join(',',tags), '${GITHUB_SHA}')].digest | [0]" -o tsv); ui_digest=$(az acr repository show-manifests --name "$acr" --repository incidentlab-ui --query "[?contains(join(',',tags), '${GITHUB_SHA}')].digest | [0]" -o tsv); test -n "$digest"; test -n "$ui_digest"; echo "built image digests: $acr.azurecr.io/incidentlab@$digest and $acr.azurecr.io/incidentlab-ui@$ui_digest" ;;
+            destroy) test "${{ inputs.confirm }}" = DESTROY-APPROVED; rg=$(terraform output -raw resource_group); test -n "$rg"; terraform destroy -auto-approve -input=false; exists=$(az group exists --name "$rg"); test "$exists" = false ;;
+            smoke) az aks get-credentials --resource-group "$(terraform output -raw resource_group)" --name "$(terraform output -raw aks_name)" --overwrite-existing; kubectl get nodes; dburl="postgresql://incidentadmin:${TF_VAR_postgres_admin_password}@$(terraform output -raw postgres_fqdn):5432/incidentlab?sslmode=require"; kubectl -n incidentlab create secret generic database --from-literal=url="$dburl" --dry-run=client -o yaml | kubectl apply -f -; kubectl -n incidentlab create secret generic operator-auth --from-literal=group-id="${{ secrets.AZURE_OPERATOR_GROUP_ID }}" --dry-run=client -o yaml | kubectl apply -f -; acr=$(terraform output -raw acr_login_server | cut -d. -f1); digest=$(az acr repository show-manifests --name "$acr" --repository incidentlab --query "[?contains(join(',',tags), '${GITHUB_SHA}')].digest | [0]" -o tsv); ui_digest=$(az acr repository show-manifests --name "$acr" --repository incidentlab-ui --query "[?contains(join(',',tags), '${GITHUB_SHA}')].digest | [0]" -o tsv); test -n "$digest"; test -n "$ui_digest"; image="$acr.azurecr.io/incidentlab@$digest"; ui_image="$acr.azurecr.io/incidentlab-ui@$ui_digest"; client=$(terraform output -raw workload_client_id); for f in ../../deploy/aks/app.yaml ../../deploy/aks/workers.yaml ../../deploy/aks/messaging.yaml ../../deploy/aks/migration.yaml; do rendered=$(sed "s#incidentlab-image-digest#$image#g; s#azure-workload-client-id#$client#g; s#entra-tenant-id#${{ secrets.AZURE_TENANT_ID }}#g; s#entra-api-client#${{ secrets.AZURE_API_CLIENT_ID }}#g" "$f"); ! printf "%s" "$rendered" | grep -Eq "incidentlab-image-digest|azure-workload-client-id|entra-tenant-id|entra-api-client|operator-group-id"; printf "%s" "$rendered" | kubectl apply -f -; done; rendered_ui=$(sed "s#incidentlab-ui-image-digest#$ui_image#g; s#entra-spa-client-id#${{ secrets.AZURE_SPA_CLIENT_ID }}#g; s#entra-tenant-id#${{ secrets.AZURE_TENANT_ID }}#g; s#operator-group-id#${{ secrets.AZURE_OPERATOR_GROUP_ID }}#g; s#entra-api-client#${{ secrets.AZURE_API_CLIENT_ID }}#g" ../../deploy/aks/ui.yaml); ! printf "%s" "$rendered_ui" | grep -Eq "incidentlab-ui-image-digest|entra-spa-client-id|entra-tenant-id|operator-group-id|entra-api-client"; printf "%s" "$rendered_ui" | kubectl apply -f -; kubectl -n incidentlab wait --for=condition=complete job/schema-migration --timeout=180s; kubectl -n incidentlab rollout status deploy/gateway --timeout=180s; kubectl -n incidentlab rollout status deploy/console --timeout=180s; kubectl -n incidentlab rollout status deploy/payment --timeout=180s; kubectl -n incidentlab rollout status deploy/notification --timeout=180s; kubectl -n incidentlab port-forward svc/gateway 18080:8080 >/tmp/port-forward.log 2>&1 & pf=$!; trap 'kill $pf' EXIT; sleep 3; REQUIRE_SMOKE_BEARER=1 SMOKE_BEARER="${{ secrets.AZURE_SMOKE_BEARER }}" BASE_URL=http://127.0.0.1:18080 sh ../../scripts/smoke.sh ;;
+          esac

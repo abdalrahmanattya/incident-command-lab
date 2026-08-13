@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+.env
+coverage.out
+dist/
+node_modules/
+test-results/
+playwright-report/
+.DS_Store
