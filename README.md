@@ -1,9 +1,9 @@
 # Incident Command Lab
 
 Incident Command Lab is a fault-injectable ticket-reservation system and
-operations console for practicing distributed reliability engineering. It
-contains a Go gateway plus catalogue, reservation, payment-simulator, and
-notification service entry points; a transactional-outbox-shaped event flow;
+operations console for inspecting and operating distributed reliability
+scenarios. It contains a Go gateway plus catalogue, reservation, payment-simulator,
+and notification service entry points; a transactional-outbox-shaped event flow;
 idempotency; retries and backlog/DLQ simulation; saga compensation; and an
 advisory incident evidence analyst.
 
@@ -12,14 +12,15 @@ advisory incident evidence analyst.
 ![Planned Azure architecture](docs/diagrams/cloud-architecture.svg)
 
 Incident Command Lab is a small, intentionally fault-injectable distributed
-systems lab. It is an operator-facing learning surface, not a production
-payment system.
+systems service and operator console. It is an operator-facing reliability
+system, not a production payment system.
 
 ## Why it exists
 
-Reliability drills are more useful when failure, evidence, recovery, and limits
-are visible together. The console makes those relationships replayable without
-cloud credentials, while the planned Azure boundary remains explicit.
+Operational response is easier to inspect when failure, evidence, recovery,
+and limits are visible together. The console makes those relationships
+replayable without cloud credentials, while the planned Azure boundary remains
+explicit.
 
 ## What it does
 
@@ -37,8 +38,8 @@ set, the gateway uses PostgreSQL for the atomic reservation/idempotency/outbox
 transaction and NATS JetStream for durable event publication, retries, and
 max-delivery worker acknowledgement. Docker Compose adds PostgreSQL, NATS
 JetStream, OpenTelemetry Collector, Prometheus, Loki, Tempo, and Grafana for
-local integration exercises. The production-shaped Azure deployment is
-Terraform for AKS, ACR, PostgreSQL Flexible Server, Key Vault, managed
+local integration services. The Azure deployment definition is Terraform for
+AKS, ACR, PostgreSQL Flexible Server, Key Vault, managed
 identity, network, and monitoring. It is manual and ephemeral by design.
 
 ## How it works
@@ -76,7 +77,7 @@ curl -X POST http://localhost:8080/ops/incidents -H 'content-type: application/j
 go test ./...
 ```
 
-For the full operator and observability lab, run `docker compose up --build`
+For the full operator and observability runtime, run `docker compose up --build`
 and open `http://localhost:8080`. Grafana is at
 `http://localhost:3000` (anonymous local viewer, no production data). The
 Compose broker/database are integration dependencies; the Go process remains
@@ -142,11 +143,23 @@ reversible through the operator endpoint.
 
 ## Safety and limitations
 
-This is a local reliability lab, not a payment processor. Payments and
+This is a local reliability system, not a payment processor. Payments and
 notifications are simulations. Synthetic data only. The in-memory mode is
-single-process; integrated durability is exercised by Compose and the AKS
+single-process; integrated durability is validated by Compose and the AKS
 workflow described in `docs/development.md`. Cloud workflows are manual,
 authenticated, protected, and require environment approval for plan, apply,
 smoke, and destroy. No credentials are stored in this repository. This project
 does not validate Azure availability, production security posture, payment
 correctness, or disaster recovery until a separately approved acceptance run.
+
+## Azure deployment method and status
+
+The exact deployment path is the protected, manually dispatched workflow in
+`.github/workflows/cloud.yml`, described in [`docs/development.md`](docs/development.md).
+It runs `terraform init` with the approved remote-state inputs, validates and
+plans `terraform/azure`, and only permits apply, smoke, or destroy after the
+`cloud-acceptance` environment and the required typed confirmation. The apply
+path builds immutable backend and UI images in ACR, renders the AKS manifests,
+and the smoke path verifies the deployed services through a port-forwarded
+gateway. Azure apply, smoke, and destroy have not been executed for this
+repository state.

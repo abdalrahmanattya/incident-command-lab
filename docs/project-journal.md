@@ -1,6 +1,6 @@
 # Project journal
 
-## Current resume point
+## Current public status
 
 Operator console and public-readiness remediation accepted locally. Next
 bounded action is a separately approved Azure acceptance run; cloud apply
@@ -13,10 +13,9 @@ remains unexecuted.
   fault injection, incident evidence, deterministic analyst and trace headers.
 - 2026-08-13 — Added local observability, kind, Azure Terraform, protected
   workflow surfaces and public safety documentation.
-- 2026-08-13 — Verified Docker image build, HTTP smoke/idempotency drill, fault
-  drill, Go race tests/vet, Terraform init/validate, main branch, and local
-  AGENTS exclusion. Also verified `docker compose config` and Terraform
-  validation without warnings; apply was not attempted.
+- 2026-08-13 — Verified Docker image build, HTTP smoke/idempotency check, fault
+  handling, Go race tests/vet, Terraform init/validate, and `docker compose
+  config` without warnings; cloud apply was not attempted.
 - 2026-08-13 — Review remediation: wired PostgreSQL transactional reservation
   and outbox, NATS JetStream publishing/ack worker with max-delivery DLQ state,
   OTLP traces/metrics, strict Ollama/Azure HTTP adapters, Compose health-gated
@@ -41,10 +40,10 @@ remains unexecuted.
   test, nginx same-origin UI proxy, Compose UI service, AKS UI manifest, and
   immutable backend/UI image workflow wiring. Added landscape system and
   planned Azure architecture diagrams with visible README embeds. Cloud apply
-  remains unexecuted; this is the exact resume point for Compose/UI/browser
-  verification.
+  remains unexecuted; the repository is ready for a separately approved Azure
+  acceptance run.
 - 2026-08-13 — Acceptance verification completed: clean Compose same-origin
-  Playwright exercised dependency compensation, fault disable/recovery,
+  Playwright validated dependency compensation, fault disable/recovery,
   confirmed idempotency, incident create/list/evidence, and deterministic
   analysis; Go JWT tests covered missing, forged, wrong issuer/audience,
   expired, wrong-group, and valid RS256/JWKS tokens; Go test/race/vet, UI

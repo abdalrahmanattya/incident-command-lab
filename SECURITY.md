@@ -1,6 +1,6 @@
 # Security policy
 
-This lab accepts security reports through a private maintainer channel before
+This service accepts security reports through a private maintainer channel before
 public disclosure. Do not include credentials, customer data, or cloud
 identifiers in reports. The Compose stack is localhost-only synthetic data;
 never expose its anonymous Grafana viewer or local database to the Internet.

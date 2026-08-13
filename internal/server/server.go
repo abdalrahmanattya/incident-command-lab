@@ -51,7 +51,7 @@ func (s *Server) Handler() http.Handler {
 	return observability.Middleware(mux, s.log)
 }
 
-// operatorOnly keeps local exercises credential-free while requiring a fully
+// operatorOnly keeps local operation credential-free while requiring a fully
 // validated Entra bearer token carrying the configured operator group in cloud
 // mode. It fails closed when any issuer, audience, expiry, signature, or group
 // claim does not match the configured values.

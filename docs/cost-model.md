@@ -3,7 +3,7 @@
 ## Local
 
 Docker Compose uses local CPU, memory, disk, and image bandwidth only. Remove
-the Compose volumes after a lab if the data is no longer needed.
+the Compose volumes when the local data is no longer needed.
 
 ## Azure acceptance
 
