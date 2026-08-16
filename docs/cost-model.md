@@ -1,15 +1,11 @@
-# Cost model
+# Cost envelope
 
 ## Local
 
-Docker Compose uses local CPU, memory, disk, and image bandwidth only. Remove
-the Compose volumes when the local data is no longer needed.
+Docker Compose uses local CPU, memory, disk, and image bandwidth only. Remove Compose volumes when local data is no longer needed.
 
-## Azure acceptance
+## Azure acceptance baseline
 
-The Terraform baseline creates AKS (two small system nodes), ACR Basic,
-PostgreSQL Flexible Server Burstable B1ms, Log Analytics, Key Vault, VNet, and
-diagnostics. Actual cost depends on region and runtime. The protected workflow
-must capture the provider cost estimate before apply, use a short acceptance
-window, and run destroy immediately after smoke tests. No permanent hosting is
-part of this repository.
+The exact Terraform baseline is: AKS with two small system nodes, ACR Basic, PostgreSQL Flexible Server Burstable B1ms, Log Analytics, Key Vault, VNet/private DNS, and diagnostics. This is a resource envelope, not a live price claim. Before APPLY, the named owner must record the current provider calculator estimate for the selected region and confirm a pre-approved budget threshold and escalation contact.
+
+The maximum acceptance window is two hours by default. The owner must approve any extension, monitor spend, and run the DESTROY gate immediately after SMOKE. No permanent hosting is part of this repository.

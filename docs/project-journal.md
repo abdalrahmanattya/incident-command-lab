@@ -52,3 +52,14 @@ remains unexecuted.
   with sips and visually inspected; cloud SVG includes embedded official Azure
   icon assets and attribution. Azure apply/deployment and authenticated cloud
   smoke remain intentionally unexecuted.
+- 2026-08-16 — Public-readiness documentation remediation: README now separates
+  purpose, capabilities, architecture, deterministic advisory contract, local
+  operation, four CI gates, exact Azure delivery method, status, limitations,
+  and blockers. Evidence now cites hosted run `31732036848` only for the
+  then-current single-job checks; the expanded four-gate workflow awaits PR
+  evidence. Key Vault, workload identity, workflow-created Kubernetes Secrets,
+  SLO evidence, cost envelope, and acceptance gates are documented accurately.
+- 2026-08-16 — Captured and visually inspected
+  `docs/assets/local-ui.png` from `ui/dist` in Chrome headless at 1440x1200.
+  A temporary localhost handler served deterministic synthetic operator-state
+  JSON; no cloud or production data was used.
