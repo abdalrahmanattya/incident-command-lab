@@ -3,8 +3,8 @@ export type Reservation = { ID: string; IdempotencyKey: string; ProductID: strin
 export type Event = { ID: string; Type: string; AggregateID: string; Status: string; Attempts: number; LastError?: string; CreatedAt: string }
 export type Incident = { ID: string; Title: string; Status: string; Severity: string; StartedAt: string; EndedAt?: string; Signals: string[]; Timeline: string[]; Runbooks: string[] }
 export type State = { products: Product[]; reservations: Reservation[]; outbox: Event[]; incidents: Incident[]; faults: string[]; Products?: Product[]; Reservations?: Reservation[]; Outbox?: Event[]; Incidents?: Incident[]; Faults?: string[] }
-export type Evidence = { IncidentID: string; Timeline: string[]; Signals: string[]; Runbooks: string[] }
-export type Advisory = { Provider: string; Summary: string; Hypotheses: { Title: string; Confidence: string; Evidence: string[] }[]; Checks: string[] }
+export type Evidence = { incident_id: string; timeline: string[]; signals: string[]; runbooks: string[] }
+export type Advisory = { provider: string; summary: string; hypotheses: { title: string; confidence: number; evidence: string[] }[]; checks: string[] }
 
 const root = '/api'
 let accessToken = ''
