@@ -13,7 +13,7 @@ services:
       otel-collector: {condition: service_started}
     read_only: true
     tmpfs: [/tmp]
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
   ui:
     build: ./ui
@@ -21,65 +21,65 @@ services:
     depends_on: {gateway: {condition: service_started}}
     read_only: true
     tmpfs: [/tmp]
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
   payment:
     build: .
     entrypoint: ["/payment"]
-    environment: {DATABASE_URL: postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable, NATS_URL: nats://nats:4222, PAYMENT_FAIL: "false"}
+    environment: {DATABASE_URL: "postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable", NATS_URL: "nats://nats:4222", PAYMENT_FAIL: "false"}
     depends_on: {migrate: {condition: service_completed_successfully}, nats: {condition: service_started}}
     read_only: true
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
   notification:
     build: .
     entrypoint: ["/notification"]
-    environment: {DATABASE_URL: postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable, NATS_URL: nats://nats:4222}
+    environment: {DATABASE_URL: "postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable", NATS_URL: "nats://nats:4222"}
     depends_on: {migrate: {condition: service_completed_successfully}, nats: {condition: service_started}}
     read_only: true
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
   postgres:
     image: postgres:16.4-alpine
     environment: [POSTGRES_USER=incidentlab, POSTGRES_PASSWORD=local-only, POSTGRES_DB=incidentlab]
-    volumes: [pgdata:/var/lib/postgresql/data, ./deploy/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro]
+    volumes: ["pgdata:/var/lib/postgresql/data", "./deploy/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro"]
     healthcheck: {test: [CMD-SHELL, pg_isready -U incidentlab], interval: 5s, timeout: 3s, retries: 10}
   migrate:
     image: postgres:16.4-alpine
     command: [sh, -c, 'psql "$${DATABASE_URL}" -f /schema/init.sql']
-    environment: {DATABASE_URL: postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable}
-    volumes: [./deploy/postgres/init.sql:/schema/init.sql:ro]
+    environment: {DATABASE_URL: "postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable"}
+    volumes: ["./deploy/postgres/init.sql:/schema/init.sql:ro"]
     depends_on: {postgres: {condition: service_healthy}}
   nats:
     image: nats:2.10.22-alpine
     command: ["-js", "-sd", "/data"]
-    volumes: [natsdata:/data]
+    volumes: ["natsdata:/data"]
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.109.0
     command: ["--config=/etc/otelcol/config.yaml"]
-    volumes: [./deploy/otel/collector.yaml:/etc/otelcol/config.yaml:ro]
+    volumes: ["./deploy/otel/collector.yaml:/etc/otelcol/config.yaml:ro"]
     ports: ["4317:4317", "4318:4318"]
   prometheus:
     image: prom/prometheus:v2.54.1
-    volumes: [./deploy/otel/prometheus.yml:/etc/prometheus/prometheus.yml:ro, ./deploy/otel/rules.yml:/etc/prometheus/rules.yml:ro]
+    volumes: ["./deploy/otel/prometheus.yml:/etc/prometheus/prometheus.yml:ro", "./deploy/otel/rules.yml:/etc/prometheus/rules.yml:ro"]
     ports: ["9090:9090"]
   loki:
     image: grafana/loki:3.2.1
     command: [-config.file=/etc/loki/config.yaml]
-    volumes: [./deploy/otel/loki.yaml:/etc/loki/config.yaml:ro]
+    volumes: ["./deploy/otel/loki.yaml:/etc/loki/config.yaml:ro"]
     ports: ["3100:3100"]
   tempo:
     image: grafana/tempo:2.6.1
     command: [-config.file=/etc/tempo.yaml]
-    volumes: [./deploy/otel/tempo.yaml:/etc/tempo.yaml:ro]
+    volumes: ["./deploy/otel/tempo.yaml:/etc/tempo.yaml:ro"]
     ports: ["3200:3200", "4319:4317"]
   promtail:
     image: grafana/promtail:3.2.1
     command: [-config.file=/etc/promtail/config.yaml]
-    volumes: [./deploy/otel/promtail.yaml:/etc/promtail/config.yaml:ro, /var/lib/docker/containers:/var/lib/docker/containers:ro]
+    volumes: ["./deploy/otel/promtail.yaml:/etc/promtail/config.yaml:ro", "/var/lib/docker/containers:/var/lib/docker/containers:ro"]
   grafana:
     image: grafana/grafana:11.3.0
     environment: [GF_AUTH_ANONYMOUS_ENABLED=true, GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer, GF_USERS_ALLOW_SIGN_UP=false]
-    volumes: [./deploy/grafana/provisioning:/etc/grafana/provisioning:ro, ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro]
+    volumes: ["./deploy/grafana/provisioning:/etc/grafana/provisioning:ro", "./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro"]
     ports: ["3000:3000"]
 volumes: {pgdata: {}, natsdata: {}}

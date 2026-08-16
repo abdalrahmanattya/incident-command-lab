@@ -34,7 +34,7 @@ PY
 
 ruby - <<'RUBY'
 require 'yaml'
-paths = Dir['.github/workflows/**/*.{yml,yaml}', 'docker-compose.yml', 'deploy/aks/**/*.{yml,yaml}', 'deploy/kind/**/*.{yml,yaml}']
+paths = Dir['.github/workflows/**/*.{yml,yaml}', 'compose.yaml', 'deploy/aks/**/*.{yml,yaml}', 'deploy/kind/**/*.{yml,yaml}']
 paths.each { |path| YAML.safe_load(File.read(path), aliases: true); puts "YAML valid: #{path}" }
 RUBY
 
