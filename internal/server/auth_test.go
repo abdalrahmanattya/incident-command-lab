@@ -36,7 +36,7 @@ func TestEntraOperatorValidation(t *testing.T) {
 		name, token string
 		status      int
 	}{
-		{"missing", "", http.StatusUnauthorized}, {"forged", valid[:len(valid)-1] + "x", http.StatusUnauthorized},
+		{"missing", "", http.StatusUnauthorized}, {"forged", valid + "x", http.StatusUnauthorized},
 		{"wrong issuer", makeToken(t, key, "https://wrong", "api://incidentlab", time.Now().Add(time.Minute), []string{"ops"}), http.StatusUnauthorized},
 		{"wrong audience", makeToken(t, key, "https://issuer.example/v2.0", "api://wrong", time.Now().Add(time.Minute), []string{"ops"}), http.StatusUnauthorized},
 		{"expired", makeToken(t, key, "https://issuer.example/v2.0", "api://incidentlab", time.Now().Add(-time.Minute), []string{"ops"}), http.StatusUnauthorized},

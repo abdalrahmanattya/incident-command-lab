@@ -25,7 +25,7 @@ services:
     cap_drop: [ALL]
   payment:
     build: .
-    entrypoint: [/payment]
+    entrypoint: ["/payment"]
     environment: {DATABASE_URL: postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable, NATS_URL: nats://nats:4222, PAYMENT_FAIL: "false"}
     depends_on: {migrate: {condition: service_completed_successfully}, nats: {condition: service_started}}
     read_only: true
@@ -33,7 +33,7 @@ services:
     cap_drop: [ALL]
   notification:
     build: .
-    entrypoint: [/notification]
+    entrypoint: ["/notification"]
     environment: {DATABASE_URL: postgres://incidentlab:local-only@postgres:5432/incidentlab?sslmode=disable, NATS_URL: nats://nats:4222}
     depends_on: {migrate: {condition: service_completed_successfully}, nats: {condition: service_started}}
     read_only: true

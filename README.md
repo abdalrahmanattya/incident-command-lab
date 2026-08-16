@@ -32,7 +32,7 @@ The Azure diagram is a planned resource graph. Key Vault is provisioned with RBA
 
 ## Run locally
 
-Requirements: Go 1.23+ or Docker. No credentials are needed.
+Requirements: Go 1.25+ or Docker. No credentials are needed.
 
 ```sh
 go run ./cmd/gateway
