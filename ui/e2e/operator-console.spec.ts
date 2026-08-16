@@ -24,7 +24,7 @@ test('dependency fault creates a compensated reservation', async ({ page }) => {
 
 test('incident list supports evidence and advisory analysis', async ({ page }) => {
   await page.route('**/api/ops/incidents', route => route.fulfill({ json: { incidents: [{ ID: 'inc-1', Title: 'Queue pressure', Severity: 'SEV2', Status: 'OPEN', StartedAt: new Date().toISOString(), Signals: ['backlog fault enabled'], Timeline: ['incident opened'], Runbooks: ['runbooks/reservation-dependency.md'] }] } }))
-  await page.route('**/api/ops/incidents/inc-1/evidence', route => route.fulfill({ json: { IncidentID: 'inc-1', Signals: ['backlog fault enabled'], Timeline: ['incident opened'], Runbooks: ['runbooks/reservation-dependency.md'] } }))
-  await page.route('**/api/ops/incidents/inc-1/analyze', route => route.fulfill({ json: { Provider: 'deterministic', Summary: 'Advisory only', Hypotheses: [], Checks: ['inspect queue'] } }))
+  await page.route('**/api/ops/incidents/inc-1/evidence', route => route.fulfill({ json: { incident_id: 'inc-1', signals: ['backlog fault enabled'], timeline: ['incident opened'], runbooks: ['runbooks/reservation-dependency.md'] } }))
+  await page.route('**/api/ops/incidents/inc-1/analyze', route => route.fulfill({ json: { provider: 'deterministic', summary: 'Advisory only', hypotheses: [], checks: ['inspect queue'] } }))
   await page.reload(); await page.getByText('Queue pressure').click(); await expect(page.getByText('Timeline')).toBeVisible(); await page.getByText('Run advisory analysis').click(); await expect(page.getByText('Advisory only')).toBeVisible()
 })
